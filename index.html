@@ -74,22 +74,9 @@
       });
     }
 
-    // Funciones de dibujo de Canvas
-    function drawHeart(cx, cy, scale, color) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.fillStyle = color;
-      for (let t = 0; t < Math.PI * 2; t += 0.1) {
-        let x = 16 * Math.pow(Math.sin(t), 3) * scale;
-        let y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * scale;
-        if (t === 0) ctx.moveTo(cx + x, cy + y);
-        else ctx.lineTo(cx + x, cy + y);
-      }
-      ctx.fill();
-      ctx.restore();
-    }
+    // --- FUNCIONES DE DIBUJO ---
 
-    // Función para dibujar una flor simple (para el ramo)
+    // Función para dibujar una flor simple para el ramo
     function drawFlower(ctx, cx, cy, radius, color, centerColor) {
       ctx.save();
       ctx.fillStyle = color;
@@ -108,7 +95,7 @@
       ctx.restore();
     }
 
-    // Función principal para dibujar el ramo
+    // Función principal para dibujar el ramo (CORREGIDO)
     function drawBouquet(ctx, centerX, centerY, scale) {
       ctx.save();
       ctx.scale(scale, scale);
@@ -144,11 +131,11 @@
         ctx.fill();
       }
 
-      // Flores rosas y rojas
+      // Flores rosas y rojas (Dibujadas sobre los tallos y hojas)
       const colors = ["#FF2A75", "#FF0055", "#FF2A75"];
-      drawFlower(ctx, -20, -40, 15, colors[0], "#FFD700");
-      drawFlower(ctx, 20, -40, 15, colors[2], "#FFD700");
-      drawFlower(ctx, 0, -60, 18, colors[1], "#FFD700");
+      drawFlower(ctx, -20, -40, 15, colors[0], "#FFD700"); // Rosa lateral
+      drawFlower(ctx, 20, -40, 15, colors[2], "#FFD700");  // Rosa lateral
+      drawFlower(ctx, 0, -60, 18, colors[1], "#FFD700");   // Rosa central más grande
 
       ctx.restore();
     }
@@ -161,3 +148,101 @@
       if (estado === "carta") {
         ctx.fillStyle = "#0B0205";
         ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = "#1F030B";
+        ctx.strokeStyle = "#FF4081";
+        ctx.lineWidth = 2;
+        ctx.fillRect(centerX - 180, centerY - 130, 360, 260);
+        ctx.strokeRect(centerX - 180, centerY - 130, 360, 260);
+
+        ctx.fillStyle = "#FFF2F5";
+        ctx.font = "italic 22px Georgia";
+        ctx.textAlign = "center";
+        ctx.fillText("✨ Para ti... ✨", centerX, centerY - 60);
+
+        ctx.fillStyle = "#FF80AB";
+        ctx.font = "italic 13px Georgia";
+        ctx.fillText("Un detalle especial preparado para Aracely", centerX, centerY - 10);
+
+        ctx.fillStyle = "#3A0014";
+        ctx.strokeStyle = "#FF2A75";
+        ctx.fillRect(centerX - 110, centerY + 40, 220, 45);
+        ctx.strokeRect(centerX - 110, centerY + 40, 220, 45);
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 11px Georgia";
+        ctx.fillText("✨ Presiona aquí para entrar ✨", centerX, centerY + 67);
+
+      } else if (estado === "animacion") {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, width, height);
+
+        let transcurrido = (Date.now() - tiempoInicio) / 1000;
+
+        columnas.forEach(col => {
+          col.y += col.velocidad;
+          if (col.y > height + 200 && transcurrido < 6.5) {
+            col.y = -200;
+          }
+
+          for (let j = 0; j < palabra.length; j++) {
+            let charY = col.y + (j * 22);
+            if (charY > 0 && charY < height) {
+              ctx.fillStyle = j === 0 ? "#FFF2F5" : "#FF4081";
+              ctx.font = "italic 14px Georgia";
+              ctx.fillText(palabra[j], col.x, charY);
+            }
+          }
+        });
+
+        if (transcurrido > 9.0) {
+          estado = "frase";
+          lastCharTime = Date.now();
+        }
+
+      } else if (estado === "frase") {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, width, height);
+
+        // --- DIBUJAR EL RAMO AQUÍ --- (CORREGIDO)
+        drawBouquet(ctx, centerX, centerY - 60, 1.2);
+
+        if (charIndex < textoFrase.length && Date.now() - lastCharTime > 100) {
+          textoAcumulado += textoFrase[charIndex];
+          charIndex++;
+          lastCharTime = Date.now();
+        }
+
+        ctx.fillStyle = "#FFF2F5";
+        ctx.font = "italic 16px Georgia";
+        ctx.textAlign = "center";
+        ctx.fillText(textoAcumulado, centerX, centerY + 50);
+
+        if (charIndex >= textoFrase.length) {
+          ctx.fillStyle = "#22000B";
+          ctx.strokeStyle = "#FF4081";
+          ctx.fillRect(centerX - 60, centerY + 120, 120, 30);
+          ctx.strokeRect(centerX - 60, centerY + 120, 120, 30);
+
+          ctx.fillStyle = "#FF80AB";
+          ctx.font = "italic 12px Georgia";
+          ctx.fillText("↺ Repetir", centerX, centerY + 140);
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener("resize", () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    loop();
+  });
+</script>
+
+</body>
+</html>
